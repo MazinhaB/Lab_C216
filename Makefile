@@ -2,11 +2,11 @@ hello:
 	echo "Ola, Sistemas Distribuidos!!"
 
 .PHONY: clean format help install lint run test
-
-POETRY := poetry run
-PYTEST := $(POETRY) pytest
-UVICORN := $(POETRY) uvicorn
-RUFF := $(POETRY) ruff
+BACKEND_DIR := backend
+POETRY := poetry -C $(BACKEND_DIR)
+PYTEST := $(POETRY) run pytest
+UVICORN := $(POETRY) run uvicorn
+RUFF := $(POETRY) run ruff
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
@@ -25,7 +25,7 @@ help:
 	@echo "  make test     - executa testes"
 
 install:
-	poetry install
+	$(POETRY) install
 
 lint:
 	$(RUFF) check .

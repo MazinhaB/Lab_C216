@@ -5,7 +5,7 @@ hello:
 BACKEND_DIR := backend
 COMPOSE := docker compose
 POETRY := poetry -C $(BACKEND_DIR)
-PYTEST := $(POETRY) run pytest
+PYTEST := $(POETRY) run python -m pytest
 UVICORN := $(POETRY) run uvicorn
 RUFF := $(POETRY) run ruff
 

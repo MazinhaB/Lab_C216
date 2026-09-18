@@ -2,9 +2,11 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
+
 @app.get("/")
 def root():
     return {"message": "Código inicial funcionando!"}
+
 
 def validate_username(username):
     if not username:

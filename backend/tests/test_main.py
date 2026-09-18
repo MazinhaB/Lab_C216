@@ -1,8 +1,7 @@
 import pytest
-
 from fastapi.testclient import TestClient
-from app.main import app
-from app.main import validate_username
+
+from app.main import app, validate_username
 
 
 @pytest.fixture

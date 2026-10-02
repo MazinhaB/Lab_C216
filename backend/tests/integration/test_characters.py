@@ -134,3 +134,19 @@ def test_patch_character_not_found():
     assert response.status_code == 200
     assert response.json() == {"error": "Character not found"}
 
+def test_delete_character():
+    response = client.delete("/characters/1")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == 1
+    assert response.json()["name"] == "Chloe"
+
+    response = client.get("/characters/1")
+    assert response.json() == {"error": "Character not found"}
+
+
+def test_delete_character_not_found():
+    response = client.delete("/characters/99")
+
+    assert response.status_code == 200
+    assert response.json() == {"error": "Character not found"}

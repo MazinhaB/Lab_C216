@@ -84,3 +84,13 @@ def patch_character(character_id, updates):
             character[field] = value
 
     return character
+
+def delete_character(character_id):
+    character = get_character_by_id(character_id)
+
+    if character is None:
+        return None
+
+    characters.remove(character)
+
+    return character

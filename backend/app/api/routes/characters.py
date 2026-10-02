@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.schemas.character import CharacterCreate, CharacterPatch
-from app.services.character import (create_character, get_character_by_id, get_all_characters, 
+from app.services.character import (create_character, delete_character, get_character_by_id, get_all_characters, 
                                     patch_character, update_character)
 
 router = APIRouter(prefix="/characters", tags=["Characters"])
@@ -50,3 +50,12 @@ def patch_character_endpoint(character_id: int, character: CharacterPatch):
         return {"error": "Character not found"}
 
     return updated_character
+
+@router.delete("/{character_id}")
+def delete_character_endpoint(character_id: int):
+    deleted_character = delete_character(character_id)
+
+    if deleted_character is None:
+        return {"error": "Character not found"}
+
+    return deleted_character

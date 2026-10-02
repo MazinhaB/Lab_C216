@@ -1,6 +1,45 @@
+import pytest
+
 from fastapi.testclient import TestClient
+from app.services.character import characters
 
 from app.main import app
+
+@pytest.fixture(autouse=True)
+def reset_characters():
+    characters.clear()
+    characters.extend(
+        [
+            {
+                "id": 1,
+                "name": "Chloe",
+                "race": "Meio-Elfo",
+                "class_name": "Bruxo",
+                "level": 5,
+            },
+            {
+                "id": 2,
+                "name": "Shump",
+                "race": "Meio-Orc",
+                "class_name": "Bárbaro",
+                "level": 5,
+            },
+            {
+                "id": 3,
+                "name": "Beekama",
+                "race": "Tiefling",
+                "class_name": "Bardo",
+                "level": 2,
+            },
+            {
+                "id": 4,
+                "name": "Alton",
+                "race": "Halfling",
+                "class_name": "Patrulheiro",
+                "level": 17,
+            },
+        ]
+    )
 
 client = TestClient(app)
 
@@ -72,3 +111,26 @@ def test_update_character_not_found():
 
     assert response.status_code == 200
     assert response.json() == {"error": "Character not found"}
+
+def test_patch_character():
+    response = client.patch(
+        "/characters/1",
+        json={"level": 7},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == 1
+    assert response.json()["name"] == "Chloe"
+    assert response.json()["class_name"] == "Bruxo"
+    assert response.json()["race"] == "Meio-Elfo"
+    assert response.json()["level"] == 7
+
+def test_patch_character_not_found():
+    response = client.patch(
+        "/characters/99",
+        json={"level": 7},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"error": "Character not found"}
+

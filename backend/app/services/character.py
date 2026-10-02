@@ -70,3 +70,17 @@ def update_character(character_id, name, class_name, race, level):
     character["level"] = level
 
     return character
+
+def patch_character(character_id, updates):
+    character = get_character_by_id(character_id)
+
+    if character is None:
+        return None
+
+    for field, value in updates.items():
+        if value is not None:
+            if field == "name":
+                value = validate_character_name(value)
+            character[field] = value
+
+    return character

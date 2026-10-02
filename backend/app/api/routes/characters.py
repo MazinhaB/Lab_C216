@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 
-from app.schemas.character import CharacterCreate
-from app.services.character import create_character, get_character_by_id, get_all_characters, update_character
+from app.schemas.character import CharacterCreate, CharacterPatch
+from app.services.character import (create_character, get_character_by_id, get_all_characters, 
+                                    patch_character, update_character)
 
 router = APIRouter(prefix="/characters", tags=["Characters"])
 
@@ -35,6 +36,15 @@ def update_character_endpoint(character_id: int, character: CharacterCreate):
         character.race,
         character.level,
     )
+
+    if updated_character is None:
+        return {"error": "Character not found"}
+
+    return updated_character
+
+@router.patch("/{character_id}")
+def patch_character_endpoint(character_id: int, character: CharacterPatch):
+    updated_character = patch_character(character_id, character.model_dump(exclude_unset=True),)
 
     if updated_character is None:
         return {"error": "Character not found"}

@@ -28,11 +28,14 @@ characters = [
         "level": 17,
     },
 ]
+
+
 def validate_character_name(name):
     if not name:
         raise ValueError("Nome de personagem não pode ser vazio")
-    
+
     return name
+
 
 def create_character(name, class_name, race, level):
     name = validate_character_name(name)
@@ -49,14 +52,17 @@ def create_character(name, class_name, race, level):
 
     return character
 
+
 def get_character_by_id(character_id):
     for character in characters:
         if character["id"] == character_id:
             return character
     return None
 
+
 def get_all_characters():
     return characters
+
 
 def update_character(character_id, name, class_name, race, level):
     character = get_character_by_id(character_id)
@@ -71,6 +77,7 @@ def update_character(character_id, name, class_name, race, level):
 
     return character
 
+
 def patch_character(character_id, updates):
     character = get_character_by_id(character_id)
 
@@ -84,6 +91,7 @@ def patch_character(character_id, updates):
             character[field] = value
 
     return character
+
 
 def delete_character(character_id):
     character = get_character_by_id(character_id)

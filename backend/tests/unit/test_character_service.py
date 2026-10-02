@@ -2,6 +2,7 @@ import pytest
 
 from app.services.character import characters, create_character, validate_character_name
 
+
 @pytest.fixture(autouse=True)
 def reset_characters():
     characters.clear()
@@ -38,14 +39,17 @@ def reset_characters():
         ]
     )
 
+
 def test_character_name_empty():
     with pytest.raises(ValueError):
         validate_character_name("")
+
 
 def test_character_name():
     name = validate_character_name("Chloe")
 
     assert name == "Chloe"
+
 
 def test_create_character():
     character = create_character(
@@ -61,6 +65,10 @@ def test_create_character():
     assert character["race"] == "Humano"
     assert character["level"] == 20
 
-@pytest.mark.parametrize("name", ["Chloe", "Gandalf", "Aragorn", "Beekama"],)
+
+@pytest.mark.parametrize(
+    "name",
+    ["Chloe", "Gandalf", "Aragorn", "Beekama"],
+)
 def test_valid_character_names(name):
     assert validate_character_name(name) == name

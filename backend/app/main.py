@@ -1,15 +1,6 @@
 from fastapi import FastAPI
+from app.api.routes.characters import router as characters_router
 
 app = FastAPI()
 
-
-@app.get("/")
-def root():
-    return {"message": "Código inicial funcionando!"}
-
-
-def validate_username(username):
-    if not username:
-        raise ValueError("nome de usuário não pode ser vazio")
-
-    return username
+app.include_router(characters_router)

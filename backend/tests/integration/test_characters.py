@@ -26,3 +26,49 @@ def test_create_character():
     assert response.json()["class_name"] == "Mago"
     assert response.json()["race"] == "Humano"
     assert response.json()["level"] == 20
+
+def test_get_character_by_id():
+    response = client.get("/characters/1")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == 1
+    assert response.json()["name"] == "Chloe"
+
+
+def test_get_character_not_found():
+    response = client.get("/characters/99")
+
+    assert response.status_code == 200
+    assert response.json() == {"error": "Character not found"}
+
+def test_update_character():
+    response = client.put(
+        "/characters/1",
+        json={
+            "name": "Chloe Upada",
+            "class_name": "Bruxo",
+            "race": "Meio-Elfo",
+            "level": 6,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == 1
+    assert response.json()["name"] == "Chloe Upada"
+    assert response.json()["class_name"] == "Bruxo"
+    assert response.json()["race"] == "Meio-Elfo"
+    assert response.json()["level"] == 6
+
+def test_update_character_not_found():
+    response = client.put(
+        "/characters/99",
+        json={
+            "name": "Stark",
+            "class_name": "Mago",
+            "race": "Humano",
+            "level": 1,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"error": "Character not found"}

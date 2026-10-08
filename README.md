@@ -8,12 +8,22 @@ O projeto é desenvolvido de forma contínua ao longo das aulas da disciplina, u
 
 ```text
 sistemas-distribuidos/
+
 ├── backend/
 │   ├── app/
+│   │   ├── api/
+│   │   │   └── routes/
+│   │   │       └── characters.py
+│   │   ├── schemas/
+│   │   │   └── character.py
+│   │   ├── services/
+│   │   │   └── character.py
 │   │   └── main.py
 │   ├── tests/
-│   │   └── test_main.py
-│   ├── data/
+│   │   ├── integration/
+│   │   │   └── test_characters.py
+│   │   └── unit/
+│   │       └── test_character_service.py
 │   ├── Dockerfile
 │   ├── pyproject.toml
 │   └── poetry.lock
@@ -40,7 +50,33 @@ sistemas-distribuidos/
 
 O backend é desenvolvido em Python utilizando FastAPI.
 
-Atualmente, a aplicação possui um endpoint principal e uma função de validação de nome de usuário, além de testes automatizados para verificar seu comportamento.
+A aplicação possui uma API para gerenciamento de personagens de um projeto relacionado a RPG.
+
+Atualmente, a API disponibiliza operações para criação, consulta, atualização e exclusão de personagens.
+
+### Endpoints
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/characters/` | Lista todos os personagens |
+| GET | `/characters/{character_id}` | Consulta um personagem pelo ID |
+| POST | `/characters/` | Cria um novo personagem |
+| PUT | `/characters/{character_id}` | Atualiza um personagem |
+| PATCH | `/characters/{character_id}` | Atualiza parcialmente um personagem |
+| DELETE | `/characters/{character_id}` | Exclui um personagem |
+
+Os endpoints utilizam Path Parameters, como `character_id`, para identificar os personagens.
+
+Os dados recebidos pela API são validados utilizando modelos Pydantic.
+
+### Estrutura do backend
+
+A aplicação utiliza uma separação de responsabilidades entre as principais partes do backend:
+
+- **Routes:** responsáveis pelos endpoints e pela comunicação HTTP;
+- **Schemas:** responsáveis pela definição e validação dos dados utilizando Pydantic;
+- **Services:** responsáveis pelas regras e operações relacionadas aos personagens;
+- **Main:** responsável pela inicialização da aplicação e inclusão dos routers.
 
 ### Executando o backend
 
@@ -55,12 +91,23 @@ make run
 A aplicação estará disponível em:
 
 ```text
-http://localhost:8000
+http://127.0.0.1:8000/characters/
+```
+
+A documentação interativa da API pode ser acessada em:
+
+```text
+http://127.0.0.1:8000/docs
 ```
 
 ## Testes
 
 Os testes automatizados são desenvolvidos utilizando Pytest.
+
+Os testes são separados em:
+
+- **Testes unitários:** verificam funções e regras do service de personagens;
+- **Testes de integração:** verificam os endpoints da API utilizando `TestClient`.
 
 Para executar os testes localmente:
 

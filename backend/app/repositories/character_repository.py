@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models.character_model import Character
 
+
 class CharacterRepository:
     """Responsável pelo acesso ao banco de dados de personagens"""
 

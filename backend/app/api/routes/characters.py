@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
-from app.schemas.character_schema import CharacterCreate, CharacterPatch, CharacterRead, CharacterUpdate
+from app.schemas.character_schema import (
+    CharacterCreate,
+    CharacterPatch,
+    CharacterRead,
+    CharacterUpdate,
+)
 from app.services.character_service import (
     create_character,
     delete_character,
@@ -21,7 +26,9 @@ def list_characters(db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=CharacterRead)
-def create_character_endpoint(character: CharacterCreate, db: Session = Depends(get_db)):
+def create_character_endpoint(
+    character: CharacterCreate, db: Session = Depends(get_db)
+):
     return create_character(
         db,
         character.name,
@@ -40,7 +47,9 @@ def get_character(character_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{character_id}", response_model=CharacterRead)
-def update_character_endpoint(character_id: int, character: CharacterUpdate, db: Session = Depends(get_db)):
+def update_character_endpoint(
+    character_id: int, character: CharacterUpdate, db: Session = Depends(get_db)
+):
     updated_character = update_character(
         db,
         character_id,
@@ -57,7 +66,9 @@ def update_character_endpoint(character_id: int, character: CharacterUpdate, db:
 
 
 @router.patch("/{character_id}", response_model=CharacterRead)
-def patch_character_endpoint(character_id: int, character: CharacterPatch, db: Session = Depends(get_db)):
+def patch_character_endpoint(
+    character_id: int, character: CharacterPatch, db: Session = Depends(get_db)
+):
     updated_character = patch_character(
         db,
         character_id,

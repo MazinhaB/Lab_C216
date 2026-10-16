@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.character_model import Character
 from app.repositories.character_repository import CharacterRepository
 
+
 def validate_character_name(name):
     if not name:
         raise ValueError("Nome de personagem não pode ser vazio")
@@ -10,7 +11,9 @@ def validate_character_name(name):
     return name
 
 
-def create_character(db: Session, name: str, class_name: str, race: str, level: int) -> Character:
+def create_character(
+    db: Session, name: str, class_name: str, race: str, level: int
+) -> Character:
     repository = CharacterRepository(db)
 
     name = validate_character_name(name)
@@ -21,7 +24,6 @@ def get_character_by_id(db: Session, character_id: int) -> Character | None:
     repository = CharacterRepository(db)
 
     return repository.get_by_id(character_id)
-    
 
 
 def get_all_characters(db: Session, skip: int = 0, limit: int = 100) -> list[Character]:
@@ -30,7 +32,9 @@ def get_all_characters(db: Session, skip: int = 0, limit: int = 100) -> list[Cha
     return repository.get_all(skip, limit)
 
 
-def update_character(db: Session, character_id: int, name: str, class_name: str, race: str, level: int) -> Character | None:
+def update_character(
+    db: Session, character_id: int, name: str, class_name: str, race: str, level: int
+) -> Character | None:
     repository = CharacterRepository(db)
 
     character = repository.get_by_id(character_id)
@@ -47,7 +51,6 @@ def update_character(db: Session, character_id: int, name: str, class_name: str,
     }
 
     return repository.update(character, changes)
-    
 
 
 def patch_character(db: Session, character_id: int, changes: dict) -> Character | None:
@@ -61,7 +64,6 @@ def patch_character(db: Session, character_id: int, changes: dict) -> Character 
         changes["name"] = validate_character_name(changes["name"])
 
     return repository.update(character, changes)
-    
 
 
 def delete_character(db: Session, character_id: int) -> Character | None:

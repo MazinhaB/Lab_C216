@@ -1,7 +1,7 @@
 hello:
 	echo "Ola, Sistemas Distribuidos!!"
 
-.PHONY: build clean down format help install lint logs logs-api ps shell run temp-clean test up up-build
+.PHONY: build clean db-current db-migration db-upgrade down format help install lint logs logs-api ps shell run temp-clean test up up-build
 BACKEND_DIR := backend
 COMPOSE := docker compose
 POETRY := poetry -C $(BACKEND_DIR)
@@ -18,12 +18,24 @@ clean:
 down:
 	$(COMPOSE) down
 
+db-current:
+	$(COMPOSE) exec api poetry run alembic current
+
+db-migration:
+	$(COMPOSE) exec api poetry run alembic revision --autogenerate -m "$(msg)"
+
+db-upgrade:
+	$(COMPOSE) exec api poetry run alembic upgrade head
+
 format:
 	$(RUFF) format .
 
 help:
 	@echo "Comandos disponiveis:"
 	@echo "  make build			- constroi as imagens"
+	@echo "  make db-current    - mostra a revisao atual do banco"
+	@echo "  make db-migration  - cria uma nova migration (use msg='descricao')"
+	@echo "  make db-upgrade    - aplica as migrations pendentes"
 	@echo "  make clean			- remove containers, rede e volumes do Compose"
 	@echo "  make down			- para e remove os containers"
 	@echo "  make format		- formata o codigo"

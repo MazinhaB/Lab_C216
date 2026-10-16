@@ -1,6 +1,6 @@
 import pytest
 
-from app.services.character import characters, create_character, validate_character_name
+from backend.app.services.character_service import characters, create_character, validate_character_name
 
 
 @pytest.fixture(autouse=True)

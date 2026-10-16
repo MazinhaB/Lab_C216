@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.services.character import characters
+from backend.app.services.character_service import characters
 
 
 @pytest.fixture(autouse=True)

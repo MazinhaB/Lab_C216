@@ -1,43 +1,22 @@
+from unittest.mock import MagicMock
+
 import pytest
 
-from backend.app.services.character_service import characters, create_character, validate_character_name
+from app.models.character_model import Character
+from app.services.character_service import (
+    create_character,
+    delete_character,
+    get_all_characters,
+    get_character_by_id,
+    patch_character,
+    update_character,
+    validate_character_name,
+)
 
 
-@pytest.fixture(autouse=True)
-def reset_characters():
-    characters.clear()
-    characters.extend(
-        [
-            {
-                "id": 1,
-                "name": "Chloe",
-                "race": "Meio-Elfo",
-                "class_name": "Bruxo",
-                "level": 5,
-            },
-            {
-                "id": 2,
-                "name": "Shump",
-                "race": "Meio-Orc",
-                "class_name": "Bárbaro",
-                "level": 5,
-            },
-            {
-                "id": 3,
-                "name": "Beekama",
-                "race": "Tiefling",
-                "class_name": "Bardo",
-                "level": 2,
-            },
-            {
-                "id": 4,
-                "name": "Alton",
-                "race": "Halfling",
-                "class_name": "Patrulheiro",
-                "level": 17,
-            },
-        ]
-    )
+@pytest.fixture()
+def db():
+    return MagicMock()
 
 
 def test_character_name_empty():
@@ -51,19 +30,24 @@ def test_character_name():
     assert name == "Chloe"
 
 
-def test_create_character():
-    character = create_character(
-        "Gandalf",
-        "Mago",
-        "Humano",
-        20,
+def test_create_character(db):
+    character = Character(
+        id=5, name="Gandalf", class_name="Mago", race="Humano", level=20
     )
 
-    assert character["id"] == 5
-    assert character["name"] == "Gandalf"
-    assert character["class_name"] == "Mago"
-    assert character["race"] == "Humano"
-    assert character["level"] == 20
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        repository = MagicMock()
+        repository.create.return_value = character
+
+        monkeypatch.setattr(
+            "app.services.character_service.CharacterRepository", lambda _: repository
+        )
+
+        result = create_character(db, "Gandalf", "Mago", "Humano", 20)
+
+    repository.create.assert_called_once_with("Gandalf", "Mago", "Humano", 20)
+    assert result.name == "Gandalf"
+    assert result.id == 5
 
 
 @pytest.mark.parametrize(
@@ -72,3 +56,141 @@ def test_create_character():
 )
 def test_valid_character_names(name):
     assert validate_character_name(name) == name
+
+
+def test_get_character_by_id(db):
+    character = Character(
+        id=1,
+        name="Chloe",
+        class_name="Bruxo",
+        race="Meio-Elfo",
+        level=5,
+    )
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        repository = MagicMock()
+        repository.get_by_id.return_value = character
+
+        monkeypatch.setattr(
+            "app.services.character_service.CharacterRepository",
+            lambda _: repository,
+        )
+
+        result = get_character_by_id(db, 1)
+
+    assert result == character
+    repository.get_by_id.assert_called_once_with(1)
+
+
+def test_get_all_characters(db):
+    characters = [
+        Character(
+            id=1,
+            name="Chloe",
+            class_name="Bruxo",
+            race="Meio-Elfo",
+            level=5,
+        )
+    ]
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        repository = MagicMock()
+        repository.get_all.return_value = characters
+
+        monkeypatch.setattr(
+            "app.services.character_service.CharacterRepository",
+            lambda _: repository,
+        )
+
+        result = get_all_characters(db)
+
+    assert result == characters
+    repository.get_all.assert_called_once_with(0, 100)
+
+
+def test_update_character(db):
+    character = Character(
+        id=1,
+        name="Chloe Upada",
+        class_name="Bruxo",
+        race="Meio-Elfo",
+        level=6,
+    )
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        repository = MagicMock()
+        repository.get_by_id.return_value = character
+        repository.update.return_value = character
+
+        monkeypatch.setattr(
+            "app.services.character_service.CharacterRepository",
+            lambda _: repository,
+        )
+
+        result = update_character(db, 1, "Chloe Upada", "Bruxo", "Meio-Elfo", 6)
+
+    assert result == character
+    repository.update.assert_called_once()
+
+
+def test_update_character_not_found(db):
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        repository = MagicMock()
+        repository.get_by_id.return_value = None
+
+        monkeypatch.setattr(
+            "app.services.character_service.CharacterRepository",
+            lambda _: repository,
+        )
+
+        result = update_character(db, 99, "Stark", "Mago", "Humano", 1)
+
+    assert result is None
+    repository.update.assert_not_called()
+
+
+def test_patch_character(db):
+    character = Character(
+        id=1,
+        name="Chloe",
+        class_name="Bruxo",
+        race="Meio-Elfo",
+        level=7,
+    )
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        repository = MagicMock()
+        repository.get_by_id.return_value = character
+        repository.update.return_value = character
+        monkeypatch.setattr(
+            "app.services.character_service.CharacterRepository",
+            lambda _: repository,
+        )
+
+        result = patch_character(db, 1, {"level": 7})
+
+    assert result == character
+    repository.update.assert_called_once_with(character, {"level": 7})
+
+
+def test_delete_character(db):
+    character = Character(
+        id=1,
+        name="Chloe",
+        class_name="Bruxo",
+        race="Meio-Elfo",
+        level=5,
+    )
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        repository = MagicMock()
+        repository.get_by_id.return_value = character
+        monkeypatch.setattr(
+            "app.services.character_service.CharacterRepository",
+            lambda _: repository,
+        )
+
+        result = delete_character(db, 1)
+
+    assert result == character
+    repository.delete.assert_called_once_with(character)

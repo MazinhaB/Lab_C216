@@ -8,22 +8,35 @@ O projeto é desenvolvido de forma contínua ao longo das aulas da disciplina, u
 
 ```text
 sistemas-distribuidos/
-
 ├── backend/
 │   ├── app/
 │   │   ├── api/
 │   │   │   └── routes/
 │   │   │       └── characters.py
+│   │   ├── core/
+│   │   │   └── config.py
+│   │   ├── database/
+│   │   │   ├── base.py
+│   │   │   └── session.py
+│   │   ├── models/
+│   │   │   └── character_model.py
+│   │   ├── repositories/
+│   │   │   └── character_repository.py
 │   │   ├── schemas/
-│   │   │   └── character.py
+│   │   │   └── character_schema.py
 │   │   ├── services/
-│   │   │   └── character.py
+│   │   │   └── character_service.py
 │   │   └── main.py
+│   ├── alembic/
+│   │   ├── versions/
+│   │   │   └── cf9044a96366_create_characters_table.py
+│   │   └── env.py
 │   ├── tests/
 │   │   ├── integration/
 │   │   │   └── test_characters.py
 │   │   └── unit/
 │   │       └── test_character_service.py
+│   ├── alembic.ini
 │   ├── Dockerfile
 │   ├── pyproject.toml
 │   └── poetry.lock
@@ -41,6 +54,10 @@ sistemas-distribuidos/
 - FastAPI
 - Poetry
 - Pytest
+- Pydantic
+- SQLAlchemy
+- PostgreSQL
+- Alembic
 - Ruff
 - Docker
 - Docker Compose
@@ -48,11 +65,9 @@ sistemas-distribuidos/
 
 ## Backend
 
-O backend é desenvolvido em Python utilizando FastAPI.
+O backend é desenvolvido em Python utilizando FastAPI e disponibiliza uma API REST para gerenciamento de personagens de um projeto relacionado a RPG.
 
-A aplicação possui uma API para gerenciamento de personagens de um projeto relacionado a RPG.
-
-Atualmente, a API disponibiliza operações para criação, consulta, atualização e exclusão de personagens.
+Os dados são armazenados em um banco de dados PostgreSQL, executado por meio do Docker Compose.
 
 ### Endpoints
 
@@ -76,29 +91,75 @@ A aplicação utiliza uma separação de responsabilidades entre as principais p
 - **Routes:** responsáveis pelos endpoints e pela comunicação HTTP;
 - **Schemas:** responsáveis pela definição e validação dos dados utilizando Pydantic;
 - **Services:** responsáveis pelas regras e operações relacionadas aos personagens;
+- **Models:** representam as entidades ORM mapeadas para as tabelas do banco de dados.
+- **Database:** centraliza a configuração da conexão e das sessões do SQLAlchemy.
+- **Core:** reúne configurações da aplicação, incluindo variáveis de ambiente.
+- **Alembic:** gerencia as migrações e o versionamento do esquema do banco de dados.
 - **Main:** responsável pela inicialização da aplicação e inclusão dos routers.
+
+O fluxo principal segue a sequência:
+
+`API → Service → Repository → SQLAlchemy → PostgreSQL`
+
+Essa separação reduz o acoplamento entre as camadas e facilita a manutenção e os testes.
+
+## Banco de dados e migrações
+
+O PostgreSQL é executado em um container Docker. As configurações de conexão são fornecidas por variáveis de ambiente, evitando deixar os parâmetros de conexão fixos no código.
+
+A variável `DATABASE_URL` define a URL de conexão utilizada pela aplicação.
+
+O SQLAlchemy é responsável pelo mapeamento objeto-relacional e pela interação com o banco de dados. O Alembic é utilizado para versionar as alterações no esquema.
+
+### Comandos de migração
+
+Consultar a versão atual da migração:
+
+```bash
+make db-current
+```
+
+Aplicar as migrações pendentes:
+
+```bash
+make db-upgrade
+```
+
+Gerar uma nova migração automaticamente a partir das diferenças entre os modelos e o esquema do banco:
+
+```bash
+make db-migration msg="descricao_da_migracao"
+```
+
+Após alterar os modelos ORM, gere e revise a migração antes de aplicá-la. O arquivo gerado deve ser verificado antes de ser commitado.
 
 ### Executando o backend
 
-As dependências do projeto são gerenciadas utilizando Poetry.
+As dependências do projeto são gerenciadas utilizando Poetry. Além disso, é necessário ter Docker, Docker Compose e Make disponíveis no ambiente de execução.
 
-A partir da raiz do projeto, o backend pode ser executado com:
+### Iniciar a aplicação
+
+Na raiz do repositório, execute:
 
 ```bash
-make run
+make up-build
 ```
 
-A aplicação estará disponível em:
+Esse comando constrói a imagem da API e inicia os serviços definidos no Docker Compose, incluindo o PostgreSQL.
 
-```text
-http://127.0.0.1:8000/characters/
+Para iniciar os containers sem reconstruir a imagem:
+
+```bash
+make up
 ```
 
-A documentação interativa da API pode ser acessada em:
+A API estará disponível em:
 
-```text
-http://127.0.0.1:8000/docs
-```
+- **API:** http://localhost:8000
+- **Documentação interativa:** http://localhost:8000/docs
+- **Documentação alternativa:** http://localhost:8000/redoc
+
+A documentação interativa permite consultar os endpoints e executar requisições para testar as operações CRUD.
 
 ## Testes
 
@@ -106,8 +167,8 @@ Os testes automatizados são desenvolvidos utilizando Pytest.
 
 Os testes são separados em:
 
-- **Testes unitários:** verificam funções e regras do service de personagens;
-- **Testes de integração:** verificam os endpoints da API utilizando `TestClient`.
+- **Testes unitários:** verificam funções e regras do service de personagens de forma isolada, utilizando mocks para simular o repositório;
+- **Testes de integração:** verificam os endpoints da API com um banco de teste isolado.
 
 Para executar os testes localmente:
 
@@ -203,6 +264,9 @@ make help
 |---|---|
 | `make build` | Constrói as imagens Docker |
 | `make clean` | Remove containers, rede e volumes |
+| `make db-current` | Consulta a versão atual da migração |
+| `make db-migration` | Gera uma nova migração do Alembic |
+| `make db-upgrade` | Aplica as migrações pendentes |
 | `make down` | Para e remove os containers |
 | `make format` | Formata o código com Ruff |
 | `make install` | Instala as dependências |

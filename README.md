@@ -4,7 +4,7 @@ Repositório destinado às atividades práticas do lab da disciplina de **Sistem
 
 O projeto é desenvolvido de forma contínua ao longo das aulas da disciplina, utilizando Git/GitHub para versionamento e diferentes tecnologias para construção, execução e validação de aplicações.
 
-Atualmente, o projeto contempla um backend com API REST para gerenciamento de personagens de RPG e um frontend independente, desenvolvido para permitir o cadastro e a visualização desses personagens.
+Atualmente, o projeto contempla um backend com API REST para gerenciamento de personagens de RPG e um frontend independente, desenvolvido para permitir o cadastro, edição, remoção e a visualização desses personagens.
 
 ## Estrutura do projeto
 
@@ -48,6 +48,7 @@ sistemas-distribuidos/
 │   │   ├── components/
 │   │   │   ├── CharacterForm.jsx
 │   │   │   └── CharacterList.jsx
+│   │   │   └── CharacterDetails.jsx
 │   │   ├── App.jsx
 │   │   ├── index.css
 │   │   ├── main.jsx
@@ -183,6 +184,8 @@ A aplicação apresenta uma interface para gerenciamento de personagens de RPG, 
 ### Funcionalidades
 
 - Cadastro de personagens.
+- Edição de personagens cadastrados.
+- Remoção de personagens cadastrados.
 - Exibição dos personagens cadastrados.
 - Visualização do nome, classe, raça e nível de cada personagem.
 - Validação dos campos obrigatórios.
@@ -194,7 +197,10 @@ A aplicação apresenta uma interface para gerenciamento de personagens de RPG, 
 ### Organização do frontend
 
 - **App:** componente principal da aplicação, responsável pelo gerenciamento do estado dos personagens.
-- **Components:** reúne os componentes reutilizáveis, incluindo o formulário de cadastro e a listagem.
+- **Components:** reúne os componentes reutilizáveis:
+  - **CharacterForm:** formulário para cadastro e edição de personagens.
+  - **CharacterList:** exibição dos personagens cadastrados.
+  - **CharacterDetails:** modal com informações detalhadas e opções de edição e remoção.
 - **Validation:** centraliza as regras de validação dos dados.
 - **Tests:** organiza os testes unitários, de integração e de ponta a ponta.
 

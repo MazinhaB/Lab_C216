@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { CharacterList } from "../../src/components/CharacterList";
 
@@ -46,5 +46,27 @@ describe("CharacterList", () => {
 		expect(screen.getByText("Guerreiro")).toBeInTheDocument();
 		expect(screen.getByText("Humano")).toBeInTheDocument();
 		expect(screen.getByText("10")).toBeInTheDocument();
+	});
+	it("chama onSelect ao clicar em um personagem", () => {
+		const character = {
+			id: "1",
+			name: "Chloe",
+			class_name: "Bruxo",
+			race: "Meio-elfo",
+			level: 5,
+		};
+
+		const onSelect = vi.fn();
+
+		render(<CharacterList characters={[character]} onSelect={onSelect} />);
+
+		fireEvent.click(
+			screen.getByRole("button", {
+				name: "Ver opções do personagem Chloe",
+			}),
+		);
+
+		expect(onSelect).toHaveBeenCalledTimes(1);
+		expect(onSelect).toHaveBeenCalledWith(character);
 	});
 });

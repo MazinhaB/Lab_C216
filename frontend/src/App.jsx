@@ -1,15 +1,46 @@
 import { useState } from "react";
 import { CharacterForm } from "./components/CharacterForm";
 import { CharacterList } from "./components/CharacterList";
+import { CharacterDetails } from "./components/CharacterDetails";
 
 export default function App() {
 	const [characters, setCharacters] = useState([]);
+	const [selectedCharacter, setSelectedCharacter] = useState(null);
+	const [editingCharacter, setEditingCharacter] = useState(null);
 
 	function addCharacter({ name, class_name, race, level }) {
 		setCharacters((current) => [
 			...current,
 			{ id: crypto.randomUUID(), name, class_name, race, level },
 		]);
+	}
+	function updateCharacter(id, updatedData) {
+		setCharacters((current) =>
+			current.map((character) =>
+				character.id === id ? { ...character, ...updatedData } : character,
+			),
+		);
+
+		setEditingCharacter(null);
+		setSelectedCharacter(null);
+	}
+
+	function deleteCharacter(id) {
+		setCharacters((current) =>
+			current.filter((character) => character.id !== id),
+		);
+
+		setSelectedCharacter(null);
+		setEditingCharacter(null);
+	}
+
+	function handleEdit(character) {
+		setEditingCharacter(character);
+		setSelectedCharacter(null);
+	}
+
+	function handleCancelEdit() {
+		setEditingCharacter(null);
 	}
 
 	return (
@@ -53,14 +84,19 @@ export default function App() {
 					<section className="space-y-4">
 						<div>
 							<p className="text-xs font-semibold uppercase tracking-widest text-[#A17B3F]">
-								Novo aventureiro
+								{editingCharacter ? "Editar aventureiro" : "Novo aventureiro"}
 							</p>
 							<h2 className="mt-1 text-xl font-bold text-[#26364D]">
-								Criar personagem
+								{editingCharacter ? "Atualizar personagem" : "Criar personagem"}
 							</h2>
 						</div>
 
-						<CharacterForm onAdd={addCharacter} />
+						<CharacterForm
+							onAdd={addCharacter}
+							editingCharacter={editingCharacter}
+							onUpdate={updateCharacter}
+							onCancelEdit={handleCancelEdit}
+						/>
 					</section>
 
 					<section aria-labelledby="characters-heading" className="space-y-4">
@@ -82,14 +118,24 @@ export default function App() {
 							</span>
 						</div>
 
-						<CharacterList characters={characters} />
+						<CharacterList
+							characters={characters}
+							onSelect={setSelectedCharacter}
+						/>
 					</section>
 				</div>
-
 				<footer className="border-t border-slate-200 pt-5 text-center text-xs text-slate-400">
 					· Taverna do Aventureiro ·
 				</footer>
 			</div>
+			{selectedCharacter && (
+				<CharacterDetails
+					character={selectedCharacter}
+					onClose={() => setSelectedCharacter(null)}
+					onEdit={handleEdit}
+					onDelete={deleteCharacter}
+				/>
+			)}
 		</main>
 	);
 }

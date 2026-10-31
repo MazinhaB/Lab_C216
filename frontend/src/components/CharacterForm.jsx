@@ -1,12 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { validateCharacter } from "../validation";
 
-export function CharacterForm({ onAdd }) {
+export function CharacterForm({
+	onAdd,
+	editingCharacter,
+	onUpdate,
+	onCancelEdit,
+}) {
 	const [name, setName] = useState("");
 	const [class_name, setClassName] = useState("");
 	const [race, setRace] = useState("");
 	const [level, setLevel] = useState("");
 	const [errors, setErrors] = useState({});
+
+	useEffect(() => {
+		if (editingCharacter) {
+			setName(editingCharacter.name);
+			setClassName(editingCharacter.class_name);
+			setRace(editingCharacter.race);
+			setLevel(String(editingCharacter.level));
+			setErrors({});
+		}
+	}, [editingCharacter]);
 
 	function handleSubmit(event) {
 		event.preventDefault();
@@ -14,12 +29,26 @@ export function CharacterForm({ onAdd }) {
 		setErrors(result.errors);
 		if (Object.keys(result.errors).length > 0) return;
 
-		onAdd(result.values);
+		if (editingCharacter) {
+			onUpdate(editingCharacter.id, result.values);
+		} else {
+			onAdd(result.values);
+		}
+
+		clearForm();
+	}
+
+	function clearForm() {
 		setName("");
 		setClassName("");
 		setRace("");
 		setLevel("");
 		setErrors({});
+	}
+
+	function handleCancel() {
+		clearForm();
+		onCancelEdit();
 	}
 	const inputClass = (field) =>
 		`w-full rounded-lg border bg-white px-3 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:ring-2 ${
@@ -41,7 +70,9 @@ export function CharacterForm({ onAdd }) {
 				<div>
 					<h3 className="font-semibold text-[#26364D]">Dados do aventureiro</h3>
 					<p className="text-xs text-slate-500">
-						Preencha as informações do personagem.
+						{editingCharacter
+							? "Atualize as informações do personagem."
+							: "Preencha as informações do personagem."}
 					</p>
 				</div>
 			</div>
@@ -167,12 +198,24 @@ export function CharacterForm({ onAdd }) {
 				</div>
 			</div>
 
-			<button
-				type="submit"
-				className="w-full rounded-lg bg-[#354D6C] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#26364D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#354D6C]"
-			>
-				Adicionar personagem
-			</button>
+			<div className="flex flex-col gap-3 sm:flex-row">
+				<button
+					type="submit"
+					className="flex-1 rounded-lg bg-[#354D6C] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#26364D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#354D6C]"
+				>
+					{editingCharacter ? "Salvar alterações" : "Adicionar personagem"}
+				</button>
+
+				{editingCharacter && (
+					<button
+						type="button"
+						onClick={handleCancel}
+						className="rounded-lg border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+					>
+						Cancelar
+					</button>
+				)}
+			</div>
 		</form>
 	);
 }

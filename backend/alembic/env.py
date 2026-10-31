@@ -4,6 +4,7 @@ from alembic import context
 from app.core.config import DATABASE_URL
 from app.database.base import Base
 from app.database.session import engine
+from app.models.character_model import Character  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -180,3 +180,68 @@ def test_delete_character_not_found(client):
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Character not found"}
+
+
+@pytest.mark.parametrize("level", [0, 21, -1, 100])
+def test_create_character_with_invalid_level(client, level):
+    response = client.post(
+        "/characters/",
+        json={
+            "name": "Invalid Character",
+            "class_name": "Mago",
+            "race": "Humano",
+            "level": level,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize("level", [1, 20])
+def test_create_character_with_valid_boundary_level(client, level):
+    response = client.post(
+        "/characters/",
+        json={
+            "name": f"Character Level {level}",
+            "class_name": "Mago",
+            "race": "Humano",
+            "level": level,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["level"] == level
+
+
+@pytest.mark.parametrize("level", [0, 21])
+def test_update_character_with_invalid_level(client, level):
+    response = client.put(
+        "/characters/1",
+        json={
+            "name": "Chloe",
+            "class_name": "Bruxo",
+            "race": "Meio-Elfo",
+            "level": level,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize("level", [0, 21])
+def test_patch_character_with_invalid_level(client, level):
+    response = client.patch(
+        "/characters/1",
+        json={"level": level},
+    )
+
+    assert response.status_code == 422
+
+
+def test_patch_character_with_null_level(client):
+    response = client.patch(
+        "/characters/1",
+        json={"level": None},
+    )
+
+    assert response.status_code == 422

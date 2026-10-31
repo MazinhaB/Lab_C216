@@ -10,7 +10,8 @@ from app.services.character_service import (
     get_character_by_id,
     patch_character,
     update_character,
-    validate_character_name,
+    validate_character_level,
+    validate_required_text,
 )
 
 
@@ -19,15 +20,49 @@ def db():
     return MagicMock()
 
 
-def test_character_name_empty():
+@pytest.mark.parametrize(
+    "value, field_name",
+    [
+        ("", "Nome"),
+        ("   ", "Nome"),
+        ("", "Classe"),
+        ("   ", "Classe"),
+        ("", "Raça"),
+        ("   ", "Raça"),
+    ],
+)
+def test_required_text_empty(value, field_name):
     with pytest.raises(ValueError):
-        validate_character_name("")
+        validate_required_text(value, field_name)
 
 
-def test_character_name():
-    name = validate_character_name("Chloe")
+@pytest.mark.parametrize("field_name", ["Nome", "Classe", "Raça"])
+def test_required_text_valid(field_name):
+    result = validate_required_text("Chloe", field_name)
 
-    assert name == "Chloe"
+    assert result == "Chloe"
+
+
+def test_required_text_strips_whitespace():
+    result = validate_required_text("  Chloe  ", "Nome")
+
+    assert result == "Chloe"
+
+
+def test_required_text_too_long():
+    with pytest.raises(ValueError):
+        validate_required_text("A" * 101, "Nome")
+
+
+@pytest.mark.parametrize("level", [1, 5, 10, 20])
+def test_valid_character_levels(level):
+    assert validate_character_level(level) == level
+
+
+@pytest.mark.parametrize("level", [0, -1, 21, 100, True, False])
+def test_invalid_character_levels(level):
+    with pytest.raises(ValueError):
+        validate_character_level(level)
 
 
 def test_create_character(db):
@@ -55,7 +90,7 @@ def test_create_character(db):
     ["Chloe", "Gandalf", "Aragorn", "Beekama"],
 )
 def test_valid_character_names(name):
-    assert validate_character_name(name) == name
+    assert validate_required_text(name, "Nome") == name
 
 
 def test_get_character_by_id(db):

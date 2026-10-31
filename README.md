@@ -331,6 +331,13 @@ A execução é acionada em duas situações:
 - **Pull Request:** quando há alterações nos arquivos dentro de `frontend/` ou no próprio workflow.
 - **Push:** quando há alterações nesses mesmos caminhos na branch `main`.
 
+O workflow é dividido em dois jobs:
+
+- **Linter (`lint`):** instala as dependências e executa a análise estática do código utilizando Biome.
+- **Testes e validação (`tests`):** executa a verificação de formatação, os testes unitários e de integração com Vitest, a construção do projeto para produção e os testes E2E com Playwright.
+
+O job `tests` depende da conclusão bem-sucedida do job `lint`, por meio da propriedade `needs: lint`. Dessa forma, os testes e as demais verificações só são executados se o código passar pelo linter.
+
 ## Comandos disponíveis
 
 O projeto utiliza um Makefile para centralizar e simplificar a execução de tarefas relacionadas à infraestrutura, ao banco de dados, ao backend e ao frontend.

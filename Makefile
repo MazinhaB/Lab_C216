@@ -8,10 +8,12 @@
 
 .PHONY: frontend-check-all frontend-install frontend-dev frontend-lint frontend-format frontend-check frontend-test frontend-test-e2e frontend-build
 
+.PHONY: e2e check-all
 
 BACKEND_DIR := backend
 FRONTEND_DIR := frontend
 COMPOSE := docker compose
+E2E_COMPOSE := docker compose --env-file e2e.env -p lab-e2e
 POETRY := poetry -C $(BACKEND_DIR)
 PYTEST := $(POETRY) run python -m pytest
 UVICORN := $(POETRY) run uvicorn
@@ -49,6 +51,8 @@ backend-test:
 build:
 	$(COMPOSE) build
 
+check-all: backend-check-all frontend-check-all e2e
+
 clean:
 	$(COMPOSE) down -v
 
@@ -64,6 +68,13 @@ db-migration:
 db-upgrade:
 	$(COMPOSE) exec api poetry run alembic upgrade head
 
+e2e:
+	@set -e; \
+	trap '$(E2E_COMPOSE) down -v --remove-orphans' EXIT; \
+	$(E2E_COMPOSE) up -d --build; \
+	$(E2E_COMPOSE) exec -T api poetry run alembic upgrade head; \
+	E2E_BASE_URL=http://127.0.0.1:5174 $(NPM) run test:e2e
+
 frontend-build:
 	$(NPM) run build
 
@@ -76,7 +87,6 @@ frontend-check-all:
 	$(NPM) run format:check
 	$(NPM) run test
 	$(NPM) run build
-	$(NPM) run test:e2e
 
 frontend-dev:
 	$(NPM) run dev
@@ -135,6 +145,10 @@ help:
 	@echo "  make frontend-test-e2e - executa testes com Playwright"
 	@echo "  make frontend-build    - gera build de producao"
 	@echo "  make frontend-check-all - executa todas as verificacoes do frontend"
+	@echo ""
+	@echo "Validacao completa:"
+	@echo "  make e2e        - executa E2E full-stack em ambiente isolado"
+	@echo "  make check-all  - executa todas as verificacoes do projeto"
 
 logs:
 	$(COMPOSE) logs -f

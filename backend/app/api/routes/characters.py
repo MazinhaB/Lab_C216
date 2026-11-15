@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
@@ -25,24 +26,31 @@ def list_characters(db: Session = Depends(get_db)):
     return get_all_characters(db)
 
 
-@router.post("/", response_model=CharacterRead)
+@router.post("/", response_model=CharacterRead, status_code=status.HTTP_201_CREATED)
 def create_character_endpoint(
     character: CharacterCreate, db: Session = Depends(get_db)
 ):
-    return create_character(
-        db,
-        character.name,
-        character.class_name,
-        character.race,
-        character.level,
-    )
+    try:
+        return create_character(
+            db,
+            character.name,
+            character.class_name,
+            character.race,
+            character.level,
+        )
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Já existe um personagem com esse nome.",
+        ) from exc
 
 
 @router.get("/{character_id}", response_model=CharacterRead)
 def get_character(character_id: int, db: Session = Depends(get_db)):
     character = get_character_by_id(db, character_id)
     if character is None:
-        raise HTTPException(status_code=404, detail="Character not found")
+        raise HTTPException(status_code=404, detail="Personagem não encontrado")
     return character
 
 
@@ -50,17 +58,24 @@ def get_character(character_id: int, db: Session = Depends(get_db)):
 def update_character_endpoint(
     character_id: int, character: CharacterUpdate, db: Session = Depends(get_db)
 ):
-    updated_character = update_character(
-        db,
-        character_id,
-        character.name,
-        character.class_name,
-        character.race,
-        character.level,
-    )
+    try:
+        updated_character = update_character(
+            db,
+            character_id,
+            character.name,
+            character.class_name,
+            character.race,
+            character.level,
+        )
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Já existe um personagem com esse nome",
+        ) from exc
 
     if updated_character is None:
-        raise HTTPException(status_code=404, detail="Character not found")
+        raise HTTPException(status_code=404, detail="Personagem não encontrado")
 
     return updated_character
 
@@ -69,14 +84,21 @@ def update_character_endpoint(
 def patch_character_endpoint(
     character_id: int, character: CharacterPatch, db: Session = Depends(get_db)
 ):
-    updated_character = patch_character(
-        db,
-        character_id,
-        character.model_dump(exclude_unset=True),
-    )
+    try:
+        updated_character = patch_character(
+            db,
+            character_id,
+            character.model_dump(exclude_unset=True),
+        )
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Já existe um personagem com esse nome",
+        ) from exc
 
     if updated_character is None:
-        raise HTTPException(status_code=404, detail="Character not found")
+        raise HTTPException(status_code=404, detail="Personagem não encontrado")
 
     return updated_character
 
@@ -86,6 +108,6 @@ def delete_character_endpoint(character_id: int, db: Session = Depends(get_db)):
     deleted_character = delete_character(db, character_id)
 
     if deleted_character is None:
-        raise HTTPException(status_code=404, detail="Character not found")
+        raise HTTPException(status_code=404, detail="Personagem não encontrado")
 
     return deleted_character

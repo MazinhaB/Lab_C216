@@ -83,7 +83,7 @@ def test_create_character(client):
         },
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["name"] == "Gandalf"
     assert response.json()["class_name"] == "Mago"
     assert response.json()["race"] == "Humano"
@@ -102,7 +102,7 @@ def test_get_character_not_found(client):
     response = client.get("/characters/99")
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Character not found"}
+    assert response.json() == {"detail": "Personagem não encontrado"}
 
 
 def test_update_character(client):
@@ -136,7 +136,7 @@ def test_update_character_not_found(client):
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Character not found"}
+    assert response.json() == {"detail": "Personagem não encontrado"}
 
 
 def test_patch_character(client):
@@ -160,7 +160,7 @@ def test_patch_character_not_found(client):
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Character not found"}
+    assert response.json() == {"detail": "Personagem não encontrado"}
 
 
 def test_delete_character(client):
@@ -172,14 +172,14 @@ def test_delete_character(client):
 
     response = client.get("/characters/1")
     assert response.status_code == 404
-    assert response.json() == {"detail": "Character not found"}
+    assert response.json() == {"detail": "Personagem não encontrado"}
 
 
 def test_delete_character_not_found(client):
     response = client.delete("/characters/99")
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Character not found"}
+    assert response.json() == {"detail": "Personagem não encontrado"}
 
 
 @pytest.mark.parametrize("level", [0, 21, -1, 100])
@@ -209,7 +209,7 @@ def test_create_character_with_valid_boundary_level(client, level):
         },
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["level"] == level
 
 
@@ -245,3 +245,51 @@ def test_patch_character_with_null_level(client):
     )
 
     assert response.status_code == 422
+
+
+def test_create_character_with_duplicate_name(client):
+    response = client.post(
+        "/characters/",
+        json={
+            "name": "Chloe",
+            "class_name": "Mago",
+            "race": "Humano",
+            "level": 10,
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Já existe um personagem com esse nome."}
+
+
+def test_update_character_with_duplicate_name(client):
+    response = client.put(
+        "/characters/1",
+        json={
+            "name": "Shump",
+            "class_name": "Bruxo",
+            "race": "Meio-Elfo",
+            "level": 5,
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Já existe um personagem com esse nome"}
+
+    original = client.get("/characters/1")
+    assert original.status_code == 200
+    assert original.json()["name"] == "Chloe"
+
+
+def test_patch_character_with_duplicate_name(client):
+    response = client.patch(
+        "/characters/1",
+        json={"name": "Shump"},
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Já existe um personagem com esse nome"}
+
+    original = client.get("/characters/1")
+    assert original.status_code == 200
+    assert original.json()["name"] == "Chloe"

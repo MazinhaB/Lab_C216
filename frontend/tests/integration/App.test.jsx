@@ -1,12 +1,60 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../src/App";
 
 describe("App", () => {
+	beforeEach(() => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockImplementation((_url, options) => {
+				if (options?.method === "POST") {
+					const character = JSON.parse(options.body);
+
+					return Promise.resolve({
+						ok: true,
+						json: async () => ({
+							id: 1,
+							...character,
+						}),
+					});
+				}
+
+				if (options?.method === "PUT") {
+					const id = Number(_url.split("/").pop());
+					const character = JSON.parse(options.body);
+
+					return Promise.resolve({
+						ok: true,
+						json: async () => ({
+							id,
+							...character,
+						}),
+					});
+				}
+
+				if (options?.method === "DELETE") {
+					const id = Number(_url.split("/").pop());
+
+					return Promise.resolve({
+						ok: true,
+						json: async () => ({ id }),
+					});
+				}
+
+				return Promise.resolve({
+					ok: true,
+					json: async () => [],
+				});
+			}),
+		);
+	});
+
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
 	});
+
 	async function createCharacter(user, name = "Chloe") {
 		await user.type(screen.getByLabelText("Nome"), name);
 		await user.type(screen.getByLabelText("Classe"), "Bruxo");
@@ -191,6 +239,92 @@ describe("App", () => {
 		expect(screen.getByRole("dialog")).toBeInTheDocument();
 		expect(screen.getByRole("dialog").querySelector("h2")).toHaveTextContent(
 			"Chloe",
+		);
+	});
+
+	it("exibe o carregamento enquanto aguarda a API", async () => {
+		let resolveRequest;
+
+		fetch.mockImplementationOnce(
+			() =>
+				new Promise((resolve) => {
+					resolveRequest = resolve;
+				}),
+		);
+
+		render(<App />);
+
+		expect(screen.getByRole("status")).toHaveTextContent(
+			"Carregando personagens...",
+		);
+
+		resolveRequest({
+			ok: true,
+			json: async () => [],
+		});
+
+		expect(
+			await screen.findByText("Sua aventura começa aqui"),
+		).toBeInTheDocument();
+
+		expect(screen.queryByRole("status")).not.toBeInTheDocument();
+	});
+
+	it("exibe uma mensagem quando não consegue conectar à API", async () => {
+		fetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+		render(<App />);
+
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"Não foi possível conectar à API.",
+		);
+
+		expect(screen.queryByRole("status")).not.toBeInTheDocument();
+	});
+
+	it("exibe erro 409 e mantém os dados do formulário", async () => {
+		const user = userEvent.setup();
+
+		fetch.mockImplementation((_url, options) => {
+			if (options?.method === "POST") {
+				return Promise.resolve({
+					ok: false,
+					status: 409,
+					json: async () => ({
+						detail: "Já existe um personagem com esse nome",
+					}),
+				});
+			}
+
+			return Promise.resolve({
+				ok: true,
+				json: async () => [],
+			});
+		});
+
+		render(<App />);
+
+		await user.type(screen.getByLabelText("Nome"), "Chloe");
+		await user.type(screen.getByLabelText("Classe"), "Bruxo");
+		await user.type(screen.getByLabelText("Raça"), "Humano");
+		await user.type(screen.getByLabelText("Nível"), "5");
+
+		await user.click(
+			screen.getByRole("button", { name: "Adicionar personagem" }),
+		);
+
+		expect(
+			await screen.findByText("Já existe um personagem com esse nome"),
+		).toBeInTheDocument();
+
+		expect(screen.getByLabelText("Nome")).toHaveValue("Chloe");
+		expect(screen.getByLabelText("Classe")).toHaveValue("Bruxo");
+		expect(screen.getByLabelText("Raça")).toHaveValue("Humano");
+		expect(screen.getByLabelText("Nível")).toHaveValue(5);
+
+		expect(fetch).toHaveBeenCalledWith(
+			"http://localhost:8000/characters/",
+			expect.objectContaining({ method: "POST" }),
 		);
 	});
 });

@@ -1,23 +1,57 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { CharacterDetails } from "./components/CharacterDetails";
 import { CharacterForm } from "./components/CharacterForm";
 import { CharacterList } from "./components/CharacterList";
-import { CharacterDetails } from "./components/CharacterDetails";
+import {
+	createCharacter,
+	deleteCharacter as deleteCharacterRequest,
+	listCharacters,
+	updateCharacter as updateCharacterRequest,
+} from "./services/characters";
 
 export default function App() {
 	const [characters, setCharacters] = useState([]);
 	const [selectedCharacter, setSelectedCharacter] = useState(null);
 	const [editingCharacter, setEditingCharacter] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const [loadError, setLoadError] = useState("");
 
-	function addCharacter({ name, class_name, race, level }) {
-		setCharacters((current) => [
-			...current,
-			{ id: crypto.randomUUID(), name, class_name, race, level },
-		]);
+	useEffect(() => {
+		let active = true;
+
+		listCharacters()
+			.then((data) => {
+				if (active) {
+					setCharacters(data);
+				}
+			})
+			.catch((error) => {
+				if (active) {
+					setLoadError(error.message);
+				}
+			})
+			.finally(() => {
+				if (active) {
+					setLoading(false);
+				}
+			});
+
+		return () => {
+			active = false;
+		};
+	}, []);
+
+	async function addCharacter(values) {
+		const createdCharacter = await createCharacter(values);
+
+		setCharacters((current) => [...current, createdCharacter]);
 	}
-	function updateCharacter(id, updatedData) {
+	async function updateCharacter(id, updatedData) {
+		const updatedCharacter = await updateCharacterRequest(id, updatedData);
+
 		setCharacters((current) =>
 			current.map((character) =>
-				character.id === id ? { ...character, ...updatedData } : character,
+				character.id === id ? updatedCharacter : character,
 			),
 		);
 
@@ -25,7 +59,9 @@ export default function App() {
 		setSelectedCharacter(null);
 	}
 
-	function deleteCharacter(id) {
+	async function deleteCharacter(id) {
+		await deleteCharacterRequest(id);
+
 		setCharacters((current) =>
 			current.filter((character) => character.id !== id),
 		);
@@ -118,10 +154,24 @@ export default function App() {
 							</span>
 						</div>
 
-						<CharacterList
-							characters={characters}
-							onSelect={setSelectedCharacter}
-						/>
+						{loading && (
+							<p role="status" className="text-sm text-slate-500">
+								Carregando personagens...
+							</p>
+						)}
+
+						{loadError && (
+							<p role="alert" className="text-sm text-red-600">
+								{loadError}
+							</p>
+						)}
+
+						{!loading && !loadError && (
+							<CharacterList
+								characters={characters}
+								onSelect={setSelectedCharacter}
+							/>
+						)}
 					</section>
 				</div>
 				<footer className="border-t border-slate-200 pt-5 text-center text-xs text-slate-400">

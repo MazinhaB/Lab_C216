@@ -12,6 +12,8 @@ export function CharacterForm({
 	const [race, setRace] = useState("");
 	const [level, setLevel] = useState("");
 	const [errors, setErrors] = useState({});
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [submitError, setSubmitError] = useState("");
 
 	useEffect(() => {
 		if (editingCharacter) {
@@ -23,19 +25,32 @@ export function CharacterForm({
 		}
 	}, [editingCharacter]);
 
-	function handleSubmit(event) {
+	async function handleSubmit(event) {
 		event.preventDefault();
 		const result = validateCharacter({ name, class_name, race, level });
 		setErrors(result.errors);
+		setSubmitError("");
+
 		if (Object.keys(result.errors).length > 0) return;
 
-		if (editingCharacter) {
-			onUpdate(editingCharacter.id, result.values);
-		} else {
-			onAdd(result.values);
-		}
+		setIsSubmitting(true);
 
-		clearForm();
+		try {
+			if (editingCharacter) {
+				await onUpdate(editingCharacter.id, result.values);
+			} else {
+				await onAdd(result.values);
+			}
+			clearForm();
+		} catch (error) {
+			setSubmitError(
+				error instanceof Error
+					? error.message
+					: "Não foi possível salvar o personagem",
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
 	}
 
 	function clearForm() {
@@ -197,13 +212,22 @@ export function CharacterForm({
 					)}
 				</div>
 			</div>
-
+			{submitError && (
+				<p role="alert" className="text-sm text-red-600">
+					{submitError}
+				</p>
+			)}
 			<div className="flex flex-col gap-3 sm:flex-row">
 				<button
 					type="submit"
-					className="flex-1 rounded-lg bg-[#354D6C] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#26364D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#354D6C]"
+					disabled={isSubmitting}
+					className="flex-1 rounded-lg bg-[#354D6C] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#26364D] disabled:cursor-not-allowed disabled:opacity-60"
 				>
-					{editingCharacter ? "Salvar alterações" : "Adicionar personagem"}
+					{isSubmitting
+						? "Salvando..."
+						: editingCharacter
+							? "Salvar alterações"
+							: "Adicionar personagem"}
 				</button>
 
 				{editingCharacter && (

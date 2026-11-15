@@ -1,11 +1,29 @@
+import { useState } from "react";
+
 export function CharacterDetails({ character, onClose, onEdit, onDelete }) {
-	function handleDelete() {
+	const [isDeleting, setIsDeleting] = useState(false);
+	const [deleteError, setDeleteError] = useState("");
+
+	async function handleDelete() {
 		const confirmed = window.confirm(
 			`Tem certeza de que deseja excluir ${character.name}?`,
 		);
 
-		if (confirmed) {
-			onDelete(character.id);
+		if (!confirmed || isDeleting) return;
+
+		setIsDeleting(true);
+		setDeleteError("");
+
+		try {
+			await onDelete(character.id);
+		} catch (error) {
+			setDeleteError(
+				error instanceof Error
+					? error.message
+					: "Não foi possível excluir o personagem.",
+			);
+		} finally {
+			setIsDeleting(false);
 		}
 	}
 
@@ -79,6 +97,7 @@ export function CharacterDetails({ character, onClose, onEdit, onDelete }) {
 					<button
 						type="button"
 						onClick={() => onEdit(character)}
+						disabled={isDeleting}
 						className="flex-1 rounded-xl bg-[#26364D] px-4 py-3 font-semibold text-white transition hover:bg-[#354D6C]"
 					>
 						Editar personagem
@@ -87,11 +106,17 @@ export function CharacterDetails({ character, onClose, onEdit, onDelete }) {
 					<button
 						type="button"
 						onClick={handleDelete}
-						className="flex-1 rounded-xl border border-red-200 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-50"
+						disabled={isDeleting}
+						className="flex-1 rounded-xl border border-red-200 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
 					>
-						Excluir personagem
+						{isDeleting ? "Excluindo..." : "Excluir personagem"}
 					</button>
 				</div>
+				{deleteError && (
+					<p role="alert" className="mt-4 text-sm text-red-600">
+						{deleteError}
+					</p>
+				)}
 			</section>
 		</div>
 	);

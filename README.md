@@ -4,7 +4,7 @@ Repositório destinado às atividades práticas do lab da disciplina de **Sistem
 
 O projeto é desenvolvido de forma contínua ao longo das aulas da disciplina, utilizando Git/GitHub para versionamento e diferentes tecnologias para construção, execução e validação de aplicações.
 
-Atualmente, o projeto contempla um backend com API REST para gerenciamento de personagens de RPG e um frontend independente, desenvolvido para permitir o cadastro, edição, remoção e a visualização desses personagens.
+Atualmente, o projeto consiste em uma aplicação **full-stack para gerenciamento de personagens de RPG**. O frontend em React consome uma API REST em FastAPI, que persiste os dados em PostgreSQL. A aplicação permite cadastrar, listar, consultar, editar e excluir personagens, mantendo as alterações após recarregar a página.
 
 ## Estrutura do projeto
 
@@ -12,30 +12,19 @@ Atualmente, o projeto contempla um backend com API REST para gerenciamento de pe
 sistemas-distribuidos/
 ├── .github/
 │   └── workflows/
-│       └── ci-backend.yml
-        └── ci-frontend.yml
+│       ├── ci-backend.yml
+│       └── ci-frontend.yml
 ├── backend/
 │   ├── app/
-│   │   ├── api/
-│   │   │   └── routes/
-│   │   │       └── characters.py
-│   │   ├── core/
-│   │   │   └── config.py
+│   │   ├── api/routes/characters.py
+│   │   ├── core/config.py
 │   │   ├── database/
-│   │   │   ├── base.py
-│   │   │   └── session.py
-│   │   ├── models/
-│   │   │   └── character_model.py
-│   │   ├── repositories/
-│   │   │   └── character_repository.py
-│   │   ├── schemas/
-│   │   │   └── character_schema.py
-│   │   ├── services/
-│   │   │   └── character_service.py
+│   │   ├── models/character_model.py
+│   │   ├── repositories/character_repository.py
+│   │   ├── schemas/character_schema.py
+│   │   ├── services/character_service.py
 │   │   └── main.py
-│   ├── alembic/
-│   │   ├── versions/
-│   │   └── env.py
+│   ├── alembic/versions/
 │   ├── tests/
 │   │   ├── integration/
 │   │   └── unit/
@@ -47,54 +36,67 @@ sistemas-distribuidos/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── CharacterForm.jsx
-│   │   │   └── CharacterList.jsx
+│   │   │   ├── CharacterList.jsx
 │   │   │   └── CharacterDetails.jsx
+│   │   ├── services/characters.js
 │   │   ├── App.jsx
 │   │   ├── index.css
 │   │   ├── main.jsx
 │   │   └── validation.js
 │   ├── tests/
-│   │   ├── e2e/
+│   │   ├── e2e/characters.spec.js
 │   │   ├── integration/
 │   │   ├── unit/
 │   │   └── setup.js
+│   ├── Dockerfile
 │   ├── biome.json
-│   ├── index.html
 │   ├── package.json
 │   ├── package-lock.json
 │   ├── playwright.config.js
 │   └── vite.config.js
 ├── compose.yaml
+├── e2e.env
 ├── Makefile
 └── README.md
 ```
 
 ## Tecnologias
 
-- GitHub Actions
+| Camada | Tecnologias |
+| --- | --- |
+| Backend | Python 3.14, FastAPI, Pydantic, SQLAlchemy, Poetry |
+| Banco de dados | PostgreSQL 16, Alembic |
+| Frontend | JavaScript, React, Vite, Tailwind CSS |
+| Testes do backend | Pytest |
+| Testes do frontend | Vitest, Testing Library, Playwright |
+| Qualidade de código | Ruff, Biome |
+| Infraestrutura e CI | Docker, Docker Compose, Make, GitHub Actions |
 
-### Backend
-- Python
-- FastAPI
-- Poetry
-- Pytest
-- Pydantic
-- SQLAlchemy
-- PostgreSQL
-- Alembic
-- Ruff
-- Docker
-- Docker Compose
+## Arquitetura e integração full-stack
 
-### Frontend
-- JavaScript
-- React
-- Vite
-- Tailwind CSS
-- Vitest
-- Testing Library
-- Playwright
-- Biome
+O navegador acessa o frontend, que envia requisições HTTP à API. O backend valida os dados, executa as regras de negócio e utiliza o SQLAlchemy para acessar o PostgreSQL.
+
+```text
+Navegador
+    │
+    ▼
+React + Vite (frontend :5173)
+    │  HTTP / JSON (fetch)
+    ▼
+FastAPI (api :8000)
+    │
+    ▼
+Routes → Services → Repositories → SQLAlchemy
+                                      │
+                                      ▼
+                                 PostgreSQL
+```
+
+O módulo `frontend/src/services/characters.js` centraliza as chamadas HTTP da aplicação. A interface consulta os personagens na inicialização e atualiza o estado local **após a confirmação da API**, evitando apresentar operações como concluídas quando uma requisição falha.
+
+O frontend apresenta estados de carregamento e mensagens de erro para as operações assíncronas. O formulário mantém os dados preenchidos quando o cadastro ou a edição não é concluído com sucesso, e a exclusão depende de confirmação do usuário.
+
+A API configura **CORS** para permitir requisições das origens autorizadas do frontend, incluindo os métodos usados pela aplicação. Origens adicionais podem ser definidas por `CORS_ORIGINS`.
 
 ## Backend
 
@@ -159,7 +161,7 @@ Na raiz do repositório, execute:
 make up-build
 ```
 
-Esse comando constrói a imagem da API e inicia os serviços definidos no Docker Compose, incluindo o PostgreSQL.
+Esse comando constrói as imagens e inicia os três serviços do Docker Compose: frontend, API e PostgreSQL.
 
 Para iniciar os containers sem reconstruir a imagem:
 
@@ -179,7 +181,7 @@ A documentação interativa permite consultar os endpoints e executar requisiç�
 
 O frontend é desenvolvido utilizando React e Vite, com estilização por meio do Tailwind CSS.
 
-A aplicação apresenta uma interface para gerenciamento de personagens de RPG, permitindo cadastrar novos personagens e visualizar os registros existentes.
+A aplicação apresenta uma interface para gerenciamento de personagens de RPG. As operações de listagem, cadastro, edição e exclusão são enviadas à API por requisições HTTP, com os dados armazenados no PostgreSQL. O módulo `src/services/characters.js` centraliza essas chamadas.
 
 ### Funcionalidades
 
@@ -193,6 +195,8 @@ A aplicação apresenta uma interface para gerenciamento de personagens de RPG, 
 - Validação do nível, que deve ser um número inteiro entre 1 e 20.
 - Limpeza do formulário após um cadastro bem-sucedido.
 - Exibição de mensagens de validação e estado vazio da listagem.
+- Estados de carregamento e mensagens de erro nas requisições HTTP.
+- Atualização da interface somente após confirmação de sucesso da API.
 
 ### Organização do frontend
 
@@ -202,27 +206,30 @@ A aplicação apresenta uma interface para gerenciamento de personagens de RPG, 
   - **CharacterList:** exibição dos personagens cadastrados.
   - **CharacterDetails:** modal com informações detalhadas e opções de edição e remoção.
 - **Validation:** centraliza as regras de validação dos dados.
+- **Services:** centraliza as requisições HTTP e o tratamento de erros da API.
 - **Tests:** organiza os testes unitários, de integração e de ponta a ponta.
 
 ### Executando o frontend
 
 Para instalar as dependências:
+
 ```bash
 make frontend-install
 ```
+
 Para iniciar o servidor de desenvolvimento:
 
 ```bash
 make frontend-dev
 ```
 
-A aplicação estará disponível em: http://localhost:5173
+A aplicação estará disponível em: http://localhost:5173. Para utilizar a API real, mantenha o backend e o PostgreSQL em execução. Também é possível iniciar toda a aplicação diretamente com `make up-build`.
 
 ## Banco de dados e migrações
 
 O PostgreSQL é executado em um container Docker. As configurações de conexão são fornecidas por variáveis de ambiente, evitando deixar os parâmetros de conexão fixos no código.
 
-A variável `DATABASE_URL` define a URL de conexão utilizada pela aplicação.
+A variável `DATABASE_URL` define a URL de conexão utilizada pela aplicação. A origem do frontend autorizada pela API pode ser configurada com `CORS_ORIGINS`, e o frontend utiliza `VITE_API_URL` para identificar o endereço da API.
 
 O SQLAlchemy é responsável pelo mapeamento objeto-relacional e pela interação com o banco de dados. O Alembic é utilizado para versionar as alterações no esquema.
 
@@ -247,6 +254,7 @@ make db-migration msg="descricao_da_migracao"
 ```
 
 Após alterar os modelos ORM, gere e revise a migração antes de aplicá-la. O arquivo gerado deve ser verificado antes de ser commitado.
+
 ## Testes
 
 O projeto possui testes automatizados tanto para o backend quanto para o frontend.
@@ -277,8 +285,8 @@ Os testes do frontend utilizam Vitest, Testing Library e Playwright.
 Estão organizados em três categorias:
 
 - **Testes unitários:** verificam as regras de validação e o comportamento individual dos componentes.
-- **Testes de integração:** verificam a interação entre os componentes e o fluxo de cadastro na aplicação.
-- **Testes E2E (End-to-End):** simulam a utilização da aplicação no navegador, verificando os principais fluxos do usuário.
+- **Testes de integração:** verificam a interação entre os componentes e a integração com o serviço HTTP por meio de mocks.
+- **Testes E2E (End-to-End):** utilizam Playwright com frontend, API e PostgreSQL reais, incluindo testes de persistência após recarregar a página.
 
 Comandos:
 
@@ -286,11 +294,13 @@ Comandos:
 make frontend-test
 ```
 
-Executar os testes E2E:
+Executar os testes E2E full-stack em ambiente Docker isolado:
 
 ```bash
-make frontend-test-e2e
+make e2e
 ```
+
+Esse comando inicia o ambiente `lab-e2e` (frontend na porta 5174 e API na porta 8001), aplica as migrations, executa o Playwright e remove os recursos desse ambiente ao final, mesmo em caso de falha. **O volume do banco E2E é apagado, mas o banco de desenvolvimento não é afetado.**
 
 Verificar lint e formatação:
 
@@ -306,7 +316,9 @@ make frontend-build
 
 ## Docker
 
-O projeto possui configuração para execução utilizando Docker e Docker Compose.
+O projeto possui configuração para execução utilizando Docker e Docker Compose. Os serviços `frontend`, `api` e `db` podem ser iniciados com `make up-build`. O frontend fica em http://localhost:5173, a API em http://localhost:8000 e a documentação interativa em http://localhost:8000/docs. O PostgreSQL utiliza um volume persistente no ambiente de desenvolvimento.
+
+Os testes E2E utilizam um projeto Compose independente (`lab-e2e`), com portas próprias e volume temporário, evitando interferência nos dados de desenvolvimento.
 
 ## Integração Contínua
 
@@ -331,16 +343,17 @@ O workflow `ci-backend.yml` automatiza as verificações relacionadas ao backend
 
 ### CI do frontend
 
-O workflow `ci-frontend.yml` automatiza as verificações relacionadas ao frontend, permitindo validar sua implementação de forma independente do backend.
+O workflow `ci-frontend.yml` automatiza as verificações do frontend e executa os testes de integração full-stack utilizando `make e2e`.
+
 A execução é acionada em duas situações:
 
-- **Pull Request:** quando há alterações nos arquivos dentro de `frontend/` ou no próprio workflow.
-- **Push:** quando há alterações nesses mesmos caminhos na branch `main`.
+- **Pull Request:** em PRs para qualquer branch, independentemente dos arquivos alterados. Os dois workflows também são executados nessas condições.
+- **Push:** na branch `main`, quando os caminhos monitorados pelo workflow são alterados.
 
 O workflow é dividido em dois jobs:
 
 - **Linter (`lint`):** instala as dependências e executa a análise estática do código utilizando Biome.
-- **Testes e validação (`tests`):** executa a verificação de formatação, os testes unitários e de integração com Vitest, a construção do projeto para produção e os testes E2E com Playwright.
+- **Testes e validação (`tests`):** executa a verificação de formatação, os testes Vitest, o build de produção e `make e2e`, que prepara o ambiente completo e executa o Playwright.
 
 O job `tests` depende da conclusão bem-sucedida do job `lint`, por meio da propriedade `needs: lint`. Dessa forma, os testes e as demais verificações só são executados se o código passar pelo linter.
 
@@ -403,7 +416,8 @@ make help
 | `make frontend-install` | Instala as dependências com npm |
 | `make frontend-lint` | Executa a verificação estática com Biome |
 | `make frontend-test` | Executa os testes automatizados com Vitest |
-| `make frontend-test-e2e` | Executa os testes End-to-End com Playwright |
+| `make frontend-test-e2e` | Executa o Playwright diretamente (exige ambiente já iniciado) |
+| `make e2e` | Inicia a stack E2E isolada, roda os testes e limpa o ambiente |
 
 ### Validação completa
 
@@ -413,16 +427,24 @@ Para executar todas as verificações do backend:
 make backend-check-all
 ```
 
-Para executar todas as verificações do frontend:
+Para executar as verificações do frontend (lint, formatação, Vitest e build):
 
 ```bash
 make frontend-check-all
 ```
 
+Para executar **todas as verificações do projeto** (backend, frontend e E2E), utilize:
+
+```bash
+make check-all
+```
+
+Na última execução local, passaram 63 testes Pytest, 57 testes Vitest e 9 testes Playwright (129 testes no total).
+
 ## Desenvolvimento
 
 O desenvolvimento é organizado utilizando branches e pull requests no GitHub.
 
-As implementações das práticas são desenvolvidas em branches próprias e posteriormente integradas à branch `aulas` por meio de pull requests.
+As implementações das práticas são desenvolvidas em branches próprias e posteriormente integradas por meio de pull requests.
 
 Cada prática adiciona novas funcionalidades e/ou ferramentas ao projeto, mantendo o desenvolvimento incremental ao longo da disciplina.

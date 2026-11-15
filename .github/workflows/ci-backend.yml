@@ -1,14 +1,11 @@
 name: CI - Backend
 
 on:
+  pull_request:
   push:
     paths:
       - "backend/**"
       - ".github/workflows/ci-backend.yml"  
-  pull_request:
-    paths:
-      - "backend/**"
-      - ".github/workflows/ci-backend.yml"
 
 jobs:
   lint-and-format:

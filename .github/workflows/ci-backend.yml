@@ -1,0 +1,68 @@
+name: CI - Backend
+
+on:
+  push:
+    branches:
+      - projeto-final
+    paths:
+      - "backend/**"
+      - "Makefile"
+      - ".github/workflows/ci-backend.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "Makefile"
+      - ".github/workflows/ci-backend.yml"
+
+jobs:
+  backend:
+    name: Lint, Testes e Migrações
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cthulhu
+          POSTGRES_PASSWORD: cthulhu_dev
+          POSTGRES_DB: cthulhu
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U cthulhu -d cthulhu"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+psycopg://cthulhu:cthulhu_dev@localhost:5433/cthulhu
+
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v6
+
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Instalar Poetry
+        run: pipx install poetry==2.4.1
+
+      - name: Instalar dependências
+        run: make install
+
+      - name: Aplicar migrações
+        run: make db-upgrade
+
+      - name: Conferir versão do banco
+        run: make db-current
+
+      - name: Executar lint, formatação e testes
+        run: make check

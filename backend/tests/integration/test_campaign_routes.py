@@ -1,33 +1,3 @@
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
-from app.database.connection import engine, get_db
-from app.main import app
-
-
-@pytest.fixture
-def cliente():
-    with engine.connect() as connection:
-        transaction = connection.begin()
-
-        def override_get_db():
-            with Session(
-                bind=connection,
-                join_transaction_mode="create_savepoint",
-            ) as session:
-                yield session
-
-        app.dependency_overrides[get_db] = override_get_db
-
-        try:
-            with TestClient(app) as test_client:
-                yield test_client
-        finally:
-            app.dependency_overrides.pop(get_db, None)
-            transaction.rollback()
-
-
 def test_create_and_get_campaign(cliente):
     payload = {
         "name": "Mistérios de Arkham",

@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.connection import Base
+
+if TYPE_CHECKING:
+    from app.models.investigator import Investigator
 
 
 class Campaign(Base):
@@ -20,4 +26,10 @@ class Campaign(Base):
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,
+    )
+
+    investigators: Mapped[list[Investigator]] = relationship(
+        back_populates="campaign",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )

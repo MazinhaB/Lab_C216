@@ -1,0 +1,44 @@
+name: CI - Frontend
+
+on:
+  push:
+    branches:
+      - projeto-final
+    paths:
+      - "frontend/**"
+      - "Makefile"
+      - ".github/workflows/ci-frontend.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - "Makefile"
+      - ".github/workflows/ci-frontend.yml"
+
+jobs:
+  frontend:
+    name: Lint, Testes e Build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v6
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        working-directory: frontend
+        run: npm ci
+
+      - name: Executar lint, testes e build
+        run: make frontend-check

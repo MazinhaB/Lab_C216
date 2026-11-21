@@ -1,0 +1,294 @@
+:root {
+	font-family: Georgia, "Times New Roman", serif;
+	color: #342c24;
+	background: #eae0ca;
+	font-synthesis: none;
+
+	--green-dark: #20382f;
+	--green-olive: #53664e;
+	--parchment: #eae0ca;
+	--bronze: #ac8c60;
+	--brown-dark: #342c24;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-width: 320px;
+}
+
+button,
+input,
+textarea,
+select {
+	font: inherit;
+	border-radius: 0;
+}
+
+button {
+	cursor: pointer;
+}
+
+a {
+	color: inherit;
+}
+
+.app {
+	min-height: 100vh;
+}
+
+.app-header {
+	background: var(--green-dark);
+	color: var(--parchment);
+	padding: 22px clamp(20px, 5vw, 80px);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 20px;
+	border-bottom: 4px solid var(--bronze);
+}
+
+.brand {
+	font-size: 1.35rem;
+	font-weight: bold;
+	letter-spacing: 0.13em;
+	text-decoration: none;
+}
+
+.header-subtitle {
+	font-size: 0.85rem;
+	letter-spacing: 0.08em;
+}
+
+.app-content {
+	max-width: 1250px;
+	margin: 0 auto;
+	padding: 48px 28px;
+}
+
+h1 {
+	font-size: clamp(2.2rem, 4vw, 3.5rem);
+	margin: 8px 0 14px;
+}
+
+h2 {
+	font-size: 1.4rem;
+}
+
+.eyebrow {
+	color: var(--green-olive);
+	font-size: 0.8rem;
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	margin: 0;
+}
+
+.page-description {
+	color: var(--green-olive);
+	font-size: 1.05rem;
+}
+
+.empty-state {
+	border: 1px solid var(--bronze);
+	border-left: 5px solid var(--green-olive);
+	background: #f3eddf;
+	padding: 36px;
+	margin-top: 36px;
+}
+
+.empty-state p {
+	line-height: 1.6;
+}
+
+.back-link {
+	display: inline-block;
+	margin-bottom: 32px;
+	color: var(--green-olive);
+	text-decoration: none;
+	font-weight: bold;
+}
+
+.back-link:hover {
+	text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+	.app-header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.app-content {
+		padding: 32px 18px;
+	}
+
+	.empty-state {
+		padding: 24px;
+	}
+}
+
+/* Cards de campanhas */
+.campaign-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 24px;
+	margin-top: 36px;
+}
+
+.campaign-card {
+	display: block;
+	width: 100%;
+	padding: 28px;
+	background: #f3eddf;
+	color: var(--brown-dark);
+	border: 1px solid var(--bronze);
+	border-left: 5px solid var(--green-olive);
+	border-radius: 0;
+	text-align: left;
+	cursor: pointer;
+	transition:
+		box-shadow 0.2s,
+		transform 0.2s;
+}
+
+.campaign-card:hover {
+	box-shadow: 5px 5px 0 var(--bronze);
+	transform: translateY(-2px);
+}
+
+.campaign-card h2 {
+	margin: 0 0 16px;
+}
+
+.campaign-card p {
+	line-height: 1.6;
+	margin: 0;
+}
+
+/* Botão para voltar */
+.back-link {
+	display: inline-block;
+	margin-bottom: 32px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	color: var(--green-olive);
+	font-weight: bold;
+	text-align: left;
+	cursor: pointer;
+}
+
+.back-link:hover {
+	text-decoration: underline;
+}
+
+/* Cabeçalho da página */
+.page-heading {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 24px;
+}
+
+/* Botões */
+.primary-button,
+.secondary-button {
+	padding: 12px 20px;
+	border-radius: 0;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.primary-button {
+	background: var(--green-dark);
+	color: var(--parchment);
+	border: 1px solid var(--green-dark);
+}
+
+.primary-button:hover:not(:disabled) {
+	background: var(--green-olive);
+}
+
+.secondary-button {
+	background: transparent;
+	color: var(--brown-dark);
+	border: 1px solid var(--bronze);
+}
+
+.secondary-button:hover:not(:disabled) {
+	background: #e5d8bf;
+}
+
+button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* Formulário de campanhas */
+.campaign-form {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin-top: 30px;
+	padding: 28px;
+	background: #f3eddf;
+	border: 1px solid var(--bronze);
+	border-left: 5px solid var(--green-olive);
+}
+
+.campaign-form h2 {
+	margin-top: 0;
+}
+
+.campaign-form label {
+	font-weight: bold;
+}
+
+.campaign-form input,
+.campaign-form textarea {
+	width: 100%;
+	padding: 12px;
+	background: #fffaf0;
+	border: 1px solid var(--bronze);
+	color: var(--brown-dark);
+	border-radius: 0;
+}
+
+.campaign-form input:focus,
+.campaign-form textarea:focus {
+	outline: 2px solid var(--green-olive);
+	outline-offset: 2px;
+}
+
+.form-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+	margin-top: 12px;
+}
+
+.error-message {
+	color: #8b2f2f;
+	font-weight: bold;
+}
+
+.campaign-card-footer {
+	display: block;
+	margin-top: 22px;
+	padding-top: 14px;
+	border-top: 1px solid var(--bronze);
+	color: var(--green-olive);
+	font-weight: bold;
+	font-size: 0.9rem;
+}
+
+@media (max-width: 700px) {
+	.page-heading {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}

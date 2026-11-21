@@ -1,13 +1,20 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../src/App";
-import { createCampaign, getCampaigns } from "../../src/services/campaigns";
+import {
+	createCampaign,
+	deleteCampaign,
+	getCampaigns,
+	updateCampaign,
+} from "../../src/services/campaigns";
 
 vi.mock("../../src/services/campaigns", () => ({
 	getCampaigns: vi.fn(),
 	createCampaign: vi.fn(),
+	updateCampaign: vi.fn(),
+	deleteCampaign: vi.fn(),
 }));
 
 const campaigns = [
@@ -27,6 +34,10 @@ describe("Integração das campanhas", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		getCampaigns.mockResolvedValue(campaigns);
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
 	it("carrega e exibe as campanhas da API", async () => {
@@ -95,7 +106,7 @@ describe("Integração das campanhas", () => {
 				name: /O Mistério do El Dorado/i,
 			}),
 		);
-
+		await user.click(screen.getByRole("button", { name: "Abrir detalhes" }));
 		expect(
 			screen.getByRole("heading", {
 				level: 1,
@@ -127,5 +138,173 @@ describe("Integração das campanhas", () => {
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"Não foi possível carregar as campanhas.",
 		);
+	});
+
+	it("permite editar uma campanha", async () => {
+		const user = userEvent.setup();
+
+		updateCampaign.mockResolvedValue({
+			id: 85,
+			name: "El Dorado - Atualizado",
+			description: "Nova descrição da campanha.",
+		});
+
+		render(<App />);
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: /O Mistério do El Dorado/i,
+			}),
+		);
+
+		await user.click(screen.getByRole("button", { name: "Editar campanha" }));
+
+		const nameInput = screen.getByLabelText("Nome");
+		const descriptionInput = screen.getByLabelText("Descrição");
+
+		expect(nameInput).toHaveValue("O Mistério do El Dorado");
+		expect(descriptionInput).toHaveValue("Uma investigação na Amazônia.");
+
+		await user.clear(nameInput);
+		await user.type(nameInput, "El Dorado - Atualizado");
+
+		await user.clear(descriptionInput);
+		await user.type(descriptionInput, "Nova descrição da campanha.");
+
+		await user.click(screen.getByRole("button", { name: "Salvar alterações" }));
+
+		await waitFor(() => {
+			expect(updateCampaign).toHaveBeenCalledWith(85, {
+				name: "El Dorado - Atualizado",
+				description: "Nova descrição da campanha.",
+			});
+		});
+
+		expect(
+			await screen.findByRole("button", {
+				name: /El Dorado - Atualizado/i,
+			}),
+		).toBeInTheDocument();
+	});
+
+	it("mantém o formulário quando a edição falha", async () => {
+		const user = userEvent.setup();
+
+		updateCampaign.mockRejectedValue(
+			new Error("Não foi possível atualizar a campanha."),
+		);
+
+		render(<App />);
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: /O Mistério do El Dorado/i,
+			}),
+		);
+
+		await user.click(screen.getByRole("button", { name: "Editar campanha" }));
+
+		const nameInput = screen.getByLabelText("Nome");
+
+		await user.clear(nameInput);
+		await user.type(nameInput, "El Dorado - Atualizado");
+
+		await user.click(screen.getByRole("button", { name: "Salvar alterações" }));
+
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"Não foi possível atualizar a campanha.",
+		);
+
+		expect(nameInput).toHaveValue("El Dorado - Atualizado");
+	});
+
+	it("cancela a exclusão quando o usuário não confirma", async () => {
+		const user = userEvent.setup();
+
+		const confirmMock = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+		render(<App />);
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: /Mansion of Madness/i,
+			}),
+		);
+
+		await user.click(screen.getByRole("button", { name: "Excluir campanha" }));
+
+		expect(confirmMock).toHaveBeenCalledOnce();
+		expect(deleteCampaign).not.toHaveBeenCalled();
+
+		expect(
+			screen.getByRole("button", {
+				name: /Mansion of Madness/i,
+			}),
+		).toBeInTheDocument();
+	});
+
+	it("exclui uma campanha após a confirmação", async () => {
+		const user = userEvent.setup();
+
+		vi.spyOn(window, "confirm").mockReturnValue(true);
+		deleteCampaign.mockResolvedValue(undefined);
+
+		render(<App />);
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: /Mansion of Madness/i,
+			}),
+		);
+
+		await user.click(screen.getByRole("button", { name: "Excluir campanha" }));
+
+		await waitFor(() => {
+			expect(deleteCampaign).toHaveBeenCalledWith(1);
+		});
+
+		await waitFor(() => {
+			expect(
+				screen.queryByRole("button", {
+					name: /Mansion of Madness/i,
+				}),
+			).not.toBeInTheDocument();
+		});
+
+		expect(
+			screen.getByRole("button", {
+				name: /O Mistério do El Dorado/i,
+			}),
+		).toBeInTheDocument();
+	});
+
+	it("mantém a campanha quando a exclusão falha", async () => {
+		const user = userEvent.setup();
+
+		vi.spyOn(window, "confirm").mockReturnValue(true);
+
+		deleteCampaign.mockRejectedValue(
+			new Error("Não foi possível excluir a campanha."),
+		);
+
+		render(<App />);
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: /Mansion of Madness/i,
+			}),
+		);
+
+		await user.click(screen.getByRole("button", { name: "Excluir campanha" }));
+
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"Não foi possível excluir a campanha.",
+		);
+
+		expect(
+			screen.getByRole("button", {
+				name: /Mansion of Madness/i,
+			}),
+		).toBeInTheDocument();
 	});
 });

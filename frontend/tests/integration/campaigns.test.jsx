@@ -1,7 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 import App from "../../src/App";
 import {
 	createCampaign,
@@ -9,6 +8,7 @@ import {
 	getCampaigns,
 	updateCampaign,
 } from "../../src/services/campaigns";
+import { getInvestigators } from "../../src/services/investigators";
 
 vi.mock("../../src/services/campaigns", () => ({
 	getCampaigns: vi.fn(),
@@ -17,6 +17,12 @@ vi.mock("../../src/services/campaigns", () => ({
 	deleteCampaign: vi.fn(),
 }));
 
+vi.mock("../../src/services/investigators", () => ({
+	getInvestigators: vi.fn(),
+	createInvestigator: vi.fn(),
+	deleteInvestigator: vi.fn(),
+	patchInvestigator: vi.fn(),
+}));
 const campaigns = [
 	{
 		id: 1,
@@ -34,6 +40,7 @@ describe("Integração das campanhas", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		getCampaigns.mockResolvedValue(campaigns);
+		getInvestigators.mockResolvedValue([]);
 	});
 
 	afterEach(() => {

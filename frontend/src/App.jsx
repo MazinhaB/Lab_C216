@@ -16,9 +16,11 @@ export default function App() {
 	return (
 		<div className="app">
 			<header className="app-header">
-				<span className="brand">ARQUIVOS DE ARKHAM</span>
+				<span className="brand">Cthulhu's Hub</span>
 
-				<span className="header-subtitle">Gerenciador de investigadores</span>
+				<span className="header-subtitle">
+					Gerenciador de Campanhas no Sistema Call of Cthulhu
+				</span>
 			</header>
 
 			<main className="app-content">

@@ -1,5 +1,5 @@
 .PHONY: help install lint format format-check test check \
-        db-upgrade db-current db-history up-db down ps logs-db \
+        db-upgrade db-current db-history up-db down ps logs-db up logs\
         frontend-install frontend-dev frontend-lint frontend-format \
         frontend-test frontend-build frontend-check check-all
 
@@ -13,6 +13,12 @@ DATABASE_URL ?= postgresql+psycopg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@local
 export DATABASE_URL
 
 help:
+	@echo "===== DOCKER ====="
+	@echo "  make up               - Inicia a aplicacao completa"
+	@echo "  make down             - Encerra os containers"
+	@echo "  make ps               - Mostra os containers"
+	@echo "  make logs             - Mostra os logs dos servicos"
+	@echo ""
 	@echo "===== BACKEND ====="
 	@echo "  make install          - Instala dependencias do backend"
 	@echo "  make lint             - Verifica o codigo com Ruff"
@@ -84,6 +90,12 @@ ps:
 
 logs-db:
 	$(COMPOSE) logs -f db
+
+up:
+	$(COMPOSE) up --build -d
+
+logs:
+	$(COMPOSE) logs -f backend frontend db
 
 # FRONTEND
 

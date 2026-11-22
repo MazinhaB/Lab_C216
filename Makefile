@@ -9,6 +9,7 @@ POETRY = poetry run
 COMPOSE = docker compose
 
 -include .env
+DATABASE_URL ?= postgresql+psycopg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:$(POSTGRES_PORT)/$(POSTGRES_DB)
 export DATABASE_URL
 
 help:

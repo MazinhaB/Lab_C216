@@ -6,6 +6,9 @@ on:
       - projeto-final
     paths:
       - "frontend/**"
+      - "backend/**"
+      - "compose.yaml"
+      - ".env.example"
       - "Makefile"
       - ".github/workflows/ci-frontend.yml"
 
@@ -14,12 +17,15 @@ on:
       - main
     paths:
       - "frontend/**"
+      - "backend/**"
+      - "compose.yaml"
+      - ".env.example"
       - "Makefile"
       - ".github/workflows/ci-frontend.yml"
 
 jobs:
   frontend:
-    name: Lint, Testes e Build
+    name: Lint, Testes, Build e E2E
     runs-on: ubuntu-latest
 
     permissions:
@@ -42,3 +48,25 @@ jobs:
 
       - name: Executar lint, testes e build
         run: make frontend-check
+      
+      - name: Preparar variáveis de ambiente
+        run: cp .env.example .env
+
+      - name: Iniciar aplicação completa
+        run: docker compose up --build --wait
+
+      - name: Instalar navegador Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Executar teste E2E
+        run: make frontend-e2e
+
+      - name: Mostrar logs em caso de falha
+        if: failure()
+        run: docker compose logs --tail=80
+
+      - name: Encerrar contêineres
+        if: always()
+        run: docker compose down
+

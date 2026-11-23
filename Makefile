@@ -1,7 +1,7 @@
 .PHONY: help install lint format format-check test check \
         db-upgrade db-current db-history up-db down ps logs-db up logs\
         frontend-install frontend-dev frontend-lint frontend-format \
-        frontend-test frontend-build frontend-check check-all
+        frontend-test frontend-build frontend-check frontend-e2e check-all
 
 BACKEND_DIR := backend
 FRONTEND_DIR := frontend
@@ -43,6 +43,7 @@ help:
 	@echo "  make frontend-format  - Formata o codigo com Biome"
 	@echo "  make frontend-test    - Executa os testes Vitest"
 	@echo "  make frontend-build   - Gera o build de producao"
+	@echo "  make frontend-e2e     - Executa Playwright com a aplicacao Docker ativa"
 	@echo "  make frontend-check   - Executa lint, testes e build"
 	@echo ""
 	@echo "===== PROJETO COMPLETO ====="
@@ -106,10 +107,10 @@ frontend-dev:
 	cd $(FRONTEND_DIR) && npm run dev
 
 frontend-lint:
-	cd $(FRONTEND_DIR) && npx biome check src tests vitest.config.js
+	cd $(FRONTEND_DIR) && npx biome check src tests vitest.config.js playwright.config.js
 
 frontend-format:
-	cd $(FRONTEND_DIR) && npx biome check --write src tests vitest.config.js
+	cd $(FRONTEND_DIR) && npx biome check --write src tests vitest.config.js playwright.config.js
 
 frontend-test:
 	cd $(FRONTEND_DIR) && npx vitest run
@@ -117,8 +118,11 @@ frontend-test:
 frontend-build:
 	cd $(FRONTEND_DIR) && npm run build
 
+frontend-e2e:
+	cd $(FRONTEND_DIR) && npm run test:e2e
+
 frontend-check: frontend-lint frontend-test frontend-build
 
 # Projeto completo
 
-check-all: check frontend-check
+check-all: check frontend-check frontend-e2e

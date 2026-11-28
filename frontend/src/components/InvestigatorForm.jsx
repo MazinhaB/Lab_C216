@@ -125,7 +125,7 @@ export default function InvestigatorForm({ onCreate, onCancel }) {
 
 		const data = { name };
 
-		for (const [key] of attributes) {
+		for (const [key, label] of attributes) {
 			const value = Number(values[key]);
 
 			if (

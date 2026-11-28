@@ -1,5 +1,5 @@
 .PHONY: help install lint format format-check test check \
-        db-upgrade db-current db-history up-db down ps logs-db up logs\
+        db-upgrade db-current db-history up-db down ps logs-db up logs \
         frontend-install frontend-dev frontend-lint frontend-format \
         frontend-test frontend-build frontend-check frontend-e2e check-all
 
@@ -47,7 +47,7 @@ help:
 	@echo "  make frontend-check   - Executa lint, testes e build"
 	@echo ""
 	@echo "===== PROJETO COMPLETO ====="
-	@echo "  make check-all        - Verifica backend e frontend"
+	@echo "  make check-all        - Executa lint, formatacao, Pytest, Vitest, build e E2E"
 
 # BACKEND
 
@@ -93,7 +93,7 @@ logs-db:
 	$(COMPOSE) logs -f db
 
 up:
-	$(COMPOSE) up --build -d
+	$(COMPOSE) up --build --wait
 
 logs:
 	$(COMPOSE) logs -f backend frontend db
